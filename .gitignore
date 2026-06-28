@@ -1,0 +1,8 @@
+.vscode/
+.idea/
+*.log
+vendor/
+node_modules/
+*.zip
+*.rar
+*.7z
