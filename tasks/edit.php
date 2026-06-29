@@ -13,22 +13,42 @@ if (!$t) {
 
 $erro = '';
 
+function dataValida(string $data): bool {
+    $d = DateTime::createFromFormat('Y-m-d', $data);
+    return $d && $d->format('Y-m-d') === $data;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo      = trim($_POST['titulo'] ?? '');
     $descricao   = trim($_POST['descricao'] ?? '');
     $prioridade  = $_POST['prioridade'] ?? 'media';
     $data_limite = $_POST['data_limite'] ?? '';
 
+    $prioridadesValidas = ['baixa', 'media', 'alta'];
+
     if (empty($titulo)) {
         $erro = 'O título é obrigatório.';
+    } elseif (empty($data_limite)) {
+        $erro = 'A data limite é obrigatória.';
+    } elseif (!dataValida($data_limite)) {
+        $erro = 'Data limite inválida.';
+    } elseif (!in_array($prioridade, $prioridadesValidas, true)) {
+        $erro = 'Prioridade inválida.';
     } else {
         $tarefa->atualizar($id, $_SESSION['usuario_id'], $titulo, $descricao, $prioridade, $data_limite);
+
         $_SESSION['msg'] = 'Tarefa atualizada!';
         $_SESSION['msg_tipo'] = 'sucesso';
+
         header('Location: /dashboard.php');
         exit;
     }
 }
+
+$tituloValor = $_POST['titulo'] ?? $t['titulo'];
+$descricaoValor = $_POST['descricao'] ?? ($t['descricao'] ?? '');
+$prioridadeValor = $_POST['prioridade'] ?? $t['prioridade'];
+$dataLimiteValor = $_POST['data_limite'] ?? $t['data_limite'];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -36,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Tarefa</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         body { background: #F7F8FA; font-family: 'Segoe UI', sans-serif; }
@@ -56,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <div class="container">
-    <h1>✏️ Editar tarefa</h1>
+    <h1>Editar tarefa</h1>
 
     <?php if ($erro): ?>
         <div class="erro"><?= htmlspecialchars($erro) ?></div>
@@ -64,20 +85,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form method="POST">
         <label for="titulo">Título *</label>
-        <input type="text" id="titulo" name="titulo" required value="<?= htmlspecialchars($_POST['titulo'] ?? $t['titulo']) ?>">
+        <input type="text" id="titulo" name="titulo" required value="<?= htmlspecialchars($tituloValor) ?>">
 
         <label for="descricao">Descrição</label>
-        <textarea id="descricao" name="descricao"><?= htmlspecialchars($_POST['descricao'] ?? $t['descricao']) ?></textarea>
+        <textarea id="descricao" name="descricao"><?= htmlspecialchars($descricaoValor) ?></textarea>
 
-        <label for="prioridade">Prioridade</label>
-        <select id="prioridade" name="prioridade">
+        <label for="prioridade">Prioridade *</label>
+        <select id="prioridade" name="prioridade" required>
             <?php foreach (['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta'] as $val => $label): ?>
-                <option value="<?= $val ?>" <?= ($t['prioridade'] === $val) ? 'selected' : '' ?>><?= $label ?></option>
+                <option value="<?= $val ?>" <?= $prioridadeValor === $val ? 'selected' : '' ?>>
+                    <?= $label ?>
+                </option>
             <?php endforeach; ?>
         </select>
 
-        <label for="data_limite">Data limite</label>
-        <input type="date" id="data_limite" name="data_limite" value="<?= htmlspecialchars($_POST['data_limite'] ?? $t['data_limite']) ?>">
+        <label for="data_limite">Data limite *</label>
+        <input type="date" id="data_limite" name="data_limite" required value="<?= htmlspecialchars($dataLimiteValor) ?>">
 
         <div class="actions">
             <button type="submit" class="btn btn-salvar">Salvar</button>

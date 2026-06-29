@@ -9,7 +9,6 @@ $pendentes    = [];
 $em_andamento = [];
 $concluidas   = [];
 $atrasadas    = [];
-
 $hoje = date('Y-m-d');
 
 foreach ($todasTarefas as $t) {
@@ -24,13 +23,18 @@ foreach ($todasTarefas as $t) {
     }
 }
 
+$meses = ['janeiro','fevereiro','março','abril','maio','junho',
+          'julho','agosto','setembro','outubro','novembro','dezembro'];
+$mes = $meses[date('n') - 1];
+
 function badgePrioridade($p) {
     $map = [
         'alta'  => ['Alta',  'badge-alta'],
         'media' => ['Média', 'badge-media'],
         'baixa' => ['Baixa', 'badge-baixa'],
     ];
-    [$label, $class] = $map[$p] ?? [$p, ''];
+    $label = isset($map[$p]) ? $map[$p][0] : $p;
+    $class = isset($map[$p]) ? $map[$p][1] : '';
     return "<span class=\"badge $class\">$label</span>";
 }
 
@@ -44,6 +48,7 @@ function dataFormatada($data) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — Tarefas</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
@@ -67,7 +72,7 @@ function dataFormatada($data) {
 <div class="page-header">
     <div>
         <h1>Olá, <?= htmlspecialchars($_SESSION['usuario_nome']) ?></h1>
-        <p><?= date('d \d\e F \d\e Y') ?></p>
+        <p><?= date('d') . ' de ' . $mes . ' de ' . date('Y') ?></p>
     </div>
     <a href="tasks/create.php" class="btn-criar">+ Nova tarefa</a>
 </div>

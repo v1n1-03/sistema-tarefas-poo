@@ -1,21 +1,29 @@
 <?php
 session_start();
+
 if (isset($_SESSION['usuario_id'])) {
     header('Location: /dashboard.php');
     exit;
 }
 
 require_once 'classes/Usuario.php';
+
 $erro = '';
 $sucesso = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome  = trim($_POST['nome'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $senha = $_POST['senha'] ?? '';
+    $nome     = trim($_POST['nome'] ?? '');
+    $email    = trim($_POST['email'] ?? '');
+    $senha    = $_POST['senha'] ?? '';
     $confirma = $_POST['confirma'] ?? '';
 
-    if ($senha !== $confirma) {
+    if (empty($nome)) {
+        $erro = 'O nome é obrigatório.';
+    } elseif (empty($email)) {
+        $erro = 'O e-mail é obrigatório.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $erro = 'E-mail inválido.';
+    } elseif ($senha !== $confirma) {
         $erro = 'As senhas não coincidem.';
     } elseif (strlen($senha) < 6) {
         $erro = 'A senha deve ter pelo menos 6 caracteres.';
@@ -36,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro — Tarefas</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #F7F8FA; font-family: 'Segoe UI', sans-serif; }
@@ -61,16 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($erro): ?>
         <div class="erro"><?= htmlspecialchars($erro) ?></div>
     <?php endif; ?>
+
     <?php if ($sucesso): ?>
         <div class="sucesso"><?= $sucesso ?></div>
     <?php endif; ?>
 
     <form method="POST" id="form-cadastro">
         <label for="nome">Nome</label>
-        <input type="text" id="nome" name="nome" required>
+        <input type="text" id="nome" name="nome" required value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
 
         <label for="email">E-mail</label>
-        <input type="email" id="email" name="email" required>
+        <input type="email" id="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
 
         <label for="senha">Senha</label>
         <input type="password" id="senha" name="senha" required>
@@ -83,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="link">Já tem conta? <a href="/index.php">Entrar</a></div>
 </div>
+
 <script src="/assets/js/main.js"></script>
 </body>
 </html>

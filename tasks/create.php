@@ -4,19 +4,34 @@ require_once '../classes/Tarefa.php';
 
 $erro = '';
 
+function dataValida(string $data): bool {
+    $d = DateTime::createFromFormat('Y-m-d', $data);
+    return $d && $d->format('Y-m-d') === $data;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo      = trim($_POST['titulo'] ?? '');
     $descricao   = trim($_POST['descricao'] ?? '');
     $prioridade  = $_POST['prioridade'] ?? 'media';
     $data_limite = $_POST['data_limite'] ?? '';
 
+    $prioridadesValidas = ['baixa', 'media', 'alta'];
+
     if (empty($titulo)) {
         $erro = 'O título é obrigatório.';
+    } elseif (empty($data_limite)) {
+        $erro = 'A data limite é obrigatória.';
+    } elseif (!dataValida($data_limite)) {
+        $erro = 'Data limite inválida.';
+    } elseif (!in_array($prioridade, $prioridadesValidas, true)) {
+        $erro = 'Prioridade inválida.';
     } else {
         $tarefa = new Tarefa();
         $tarefa->criar($_SESSION['usuario_id'], $titulo, $descricao, $prioridade, $data_limite);
+
         $_SESSION['msg'] = 'Tarefa criada com sucesso!';
         $_SESSION['msg_tipo'] = 'sucesso';
+
         header('Location: /dashboard.php');
         exit;
     }
@@ -28,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nova Tarefa</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         body { background: #F7F8FA; font-family: 'Segoe UI', sans-serif; }
@@ -48,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <div class="container">
-    <h1>➕ Nova tarefa</h1>
+    <h1>Nova tarefa</h1>
 
     <?php if ($erro): ?>
         <div class="erro"><?= htmlspecialchars($erro) ?></div>
@@ -61,15 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="descricao">Descrição</label>
         <textarea id="descricao" name="descricao"><?= htmlspecialchars($_POST['descricao'] ?? '') ?></textarea>
 
-        <label for="prioridade">Prioridade</label>
-        <select id="prioridade" name="prioridade">
-            <option value="baixa"  <?= ($_POST['prioridade'] ?? '') === 'baixa'  ? 'selected' : '' ?>>Baixa</option>
-            <option value="media"  <?= ($_POST['prioridade'] ?? 'media') === 'media'  ? 'selected' : '' ?>>Média</option>
-            <option value="alta"   <?= ($_POST['prioridade'] ?? '') === 'alta'   ? 'selected' : '' ?>>Alta</option>
+        <label for="prioridade">Prioridade *</label>
+        <select id="prioridade" name="prioridade" required>
+            <option value="baixa" <?= ($_POST['prioridade'] ?? '') === 'baixa' ? 'selected' : '' ?>>Baixa</option>
+            <option value="media" <?= ($_POST['prioridade'] ?? 'media') === 'media' ? 'selected' : '' ?>>Média</option>
+            <option value="alta" <?= ($_POST['prioridade'] ?? '') === 'alta' ? 'selected' : '' ?>>Alta</option>
         </select>
 
-        <label for="data_limite">Data limite</label>
-        <input type="date" id="data_limite" name="data_limite" value="<?= htmlspecialchars($_POST['data_limite'] ?? '') ?>">
+        <label for="data_limite">Data limite *</label>
+        <input type="date" id="data_limite" name="data_limite" required value="<?= htmlspecialchars($_POST['data_limite'] ?? '') ?>">
 
         <div class="actions">
             <button type="submit" class="btn btn-salvar">Salvar</button>
